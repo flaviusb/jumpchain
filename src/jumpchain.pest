@@ -1,16 +1,17 @@
 section_header = @{ "## " ~ section_name }
 section_name   = @{ (!NEWLINE ~ ANY)+ }
 
-number =           @{ ('0'..'9')+ }
-points_increment = { "+"? ~ number ~ "CP" }
-refund           = @{ "(+" ~ number ~ "CP)" }
-cost             = @{ (( "(" ~ number ~ "CP, discounted to " ~ ("Free)"|(number ~ "CP)")) )|("(" ~ number ~ "CP)")) }
-jump_type        = @{ (!(NEWLINE | "(") ~ ANY)+ ~ (cost|refund)? }
-perk             = @{ (!(NEWLINE | "(") ~ ANY)+ ~ (cost|refund) }
-remainder        = { number ~ "CP unspent." }
-points_spent     = { number ~ "CP spent." }
-points_remainder = { number ~ "CP remainder." }
-section = @{ section_header ~ NEWLINE+ ~ points_increment ~ NEWLINE+ ~ jump_type ~ NEWLINE+ ~ perk+ ~ NEWLINE+ ~ remainder? ~ NEWLINE* ~ points_spent? ~ WHITESPACE* ~ points_remainder? ~ NEWLINE* }
+number            = @{ ('0'..'9')+ }
+points_increment  = @{ "+"? ~ number ~ " CP" }
+refund            = @{ "(+" ~ number ~ " CP)" }
+cost              = @{ "(Free)"|(( "(" ~ number ~ " CP, discounted to " ~ ("Free)"|(number ~ " CP)")) )|("(" ~ number ~ " CP)")) }
+jump_type         = @{ (!(NEWLINE | "(") ~ ANY)+ ~ (cost|refund)? }
+perk              = @{ (!(NEWLINE | "(") ~ ANY)+ ~ (cost|refund) }
+remainder         = { number ~ "CP unspent." }
+points_spent      = { number ~ "CP spent." }
+points_remainder  = { number ~ "CP remainder." }
+remainder_doubles = @{ "Remainder doubles to " ~ number ~ " CP." }
+section = @{ section_header ~ NEWLINE+ ~ points_increment ~ NEWLINE+ ~ jump_type ~ NEWLINE+ ~ (perk ~ NEWLINE+)* ~ remainder? ~ NEWLINE* ~ points_spent? ~ WHITESPACE* ~ (points_remainder|remainder_doubles)? ~ NEWLINE* }
 
 document = { SOI ~ section+ ~ EOI }
 
