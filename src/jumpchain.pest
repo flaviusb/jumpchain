@@ -12,4 +12,4 @@ section = @{ section_header ~ NEWLINE+ ~ points_increment ~ NEWLINE+ ~ jump_type
 
 document = { section+ }
 
-WHITESPACE = { " " }
+WHITESPACE = _{ " " }
