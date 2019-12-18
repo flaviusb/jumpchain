@@ -25,8 +25,7 @@ struct Section<'a> {
   name:             &'a str,
   points_increment: i64,
   jump_type:        Vec<(&'a str, &'a str, i64)>,
-  jump_type_cost:   i64,
-  perk:             Vec<(&'a str, i64)>,
+  perks:            Vec<(&'a str, i64)>,
   remainder:        Option<i64>,
   points_spent:     Option<i64>,
   points_remainder: Option<i64>,
@@ -68,7 +67,7 @@ fn parse_jumpchain_file<'a>(file: &'a str) -> Result<Jumpchain<'a>, pest::error:
     // Make section
     use pest::iterators::Pair;
     fn make_section<'a>(section_pair: Pair<'a, Rule>) -> Section<'a> {
-      let mut section = Section{name: "", points_increment: 0, jump_type: vec!{}, jump_type_cost: 0, perk: vec!{}, remainder: None, points_spent: None, points_remainder: None};
+      let mut section = Section{name: "", points_increment: 0, jump_type: vec!{}, perks: vec!{}, remainder: None, points_spent: None, points_remainder: None};
       //println!("section_pair.into_inner().next().unwrap().into_inner(): {:?}",section_pair.into_inner().next().unwrap().into_inner());
       let mut section_iterator = section_pair.into_inner();
       section.name = section_iterator.next().unwrap().into_inner().as_str();
@@ -86,6 +85,17 @@ fn parse_jumpchain_file<'a>(file: &'a str) -> Result<Jumpchain<'a>, pest::error:
                                                  out
                                             }).collect::<Vec<(&str, &str, i64)>>();
       section.jump_type = jump_types;
+      let perks_stream = section_iterator.next().unwrap().into_inner();
+      let perks = perks_stream.map(|perk: Pair<Rule>| -> (&str, i64) {
+                                                 //println!("perk: {:?}", perk);
+                                                 let out: (&str, i64) = match &perk.into_inner().collect::<Vec<Pair<Rule>>>()[..] {
+                                                   [k, cr] => (k.as_str(), parse_cost_refund(cr.clone())),
+                                                   a          => panic!("Not the right number of perk parts: {:?}", a),
+                                                 };
+                                                 out
+                                            }).collect::<Vec<(&str, i64)>>();
+      section.perks = perks;
+
       section
     }
     let sections = jumpchain_stream.filter(|pair| match pair.as_rule() {

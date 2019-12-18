@@ -8,13 +8,15 @@ cost              = ${ "(Free)"|(( "(" ~ number ~ " CP, discounted to " ~ ("Free
 key               = ${ (!(NEWLINE | "(" | ":") ~ ANY)+ }
 value             = ${ (!(NEWLINE | "(" | ":") ~ ANY)+ }
 jump_type         = ${ key ~ ":" ~ value ~ (cost|refund)? }
-perk              = ${ (!(NEWLINE | "(") ~ ANY)+ ~ (cost|refund) }
+perk_name         = ${ (!(NEWLINE | "(") ~ ANY)+ }
+perk              = ${ perk_name ~ (cost|refund) }
 remainder         = { number ~ "CP unspent." }
 points_spent      = { number ~ "CP spent." }
 points_remainder  = { number ~ "CP remainder." }
 remainder_doubles = ${ "Remainder doubles to " ~ number ~ " CP." }
 jump_block        = ${ (jump_type ~ NEWLINE+)+ }
-section = ${ section_header ~ NEWLINE+ ~ points_increment ~ NEWLINE+ ~ jump_block ~ (perk ~ NEWLINE+)* ~ remainder? ~ NEWLINE* ~ points_spent? ~ WHITESPACE* ~ (points_remainder|remainder_doubles)? ~ NEWLINE* }
+perk_block        = ${ (perk      ~ NEWLINE+)* }
+section = ${ section_header ~ NEWLINE+ ~ points_increment ~ NEWLINE+ ~ jump_block ~ perk_block ~ remainder? ~ NEWLINE* ~ points_spent? ~ WHITESPACE* ~ (points_remainder|remainder_doubles)? ~ NEWLINE* }
 
 document = _{ SOI ~ section+ ~ EOI }
 
