@@ -53,7 +53,10 @@ fn parse_jumpchain_file<'a>(file: &'a str) -> Result<Jumpchain<'a>, pest::error:
     fn make_section<'a>(section_pair: Pair<'a, Rule>) -> Section<'a> {
       let mut section = Section{name: "", points_increment: 0, jump_type: "", jump_type_cost: 0, perk: vec!{}, remainder: None, points_spent: None, points_remainder: None};
       //println!("section_pair.into_inner().next().unwrap().into_inner(): {:?}",section_pair.into_inner().next().unwrap().into_inner());
-      section.name = section_pair.into_inner().next().unwrap().into_inner().as_str();
+      let mut section_iterator = section_pair.into_inner();
+      section.name = section_iterator.next().unwrap().into_inner().as_str();
+      let intermediate = (section_iterator.next().unwrap().into_inner().next().unwrap().as_str());
+      section.points_increment = intermediate.parse::<i64>().unwrap();
       section
     }
     let sections = jumpchain_stream.filter(|pair| match pair.as_rule() {
