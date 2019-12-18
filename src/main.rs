@@ -76,6 +76,16 @@ fn parse_jumpchain_file<'a>(file: &'a str) -> Result<Jumpchain<'a>, pest::error:
       section.points_increment = intermediate.parse::<i64>().unwrap();
       // Get all jump type data
       let jump_types_stream = section_iterator.next().unwrap().into_inner();
+      let jump_types = jump_types_stream.map(|jump_kv: Pair<Rule>| -> (&str, &str, i64) {
+                                                 //println!("jump_kv: {:?}", jump_kv);
+                                                 let out: (&str, &str, i64) = match &jump_kv.into_inner().collect::<Vec<Pair<Rule>>>()[..] {
+                                                   [k, v]     => (k.as_str(), v.as_str(), 0),
+                                                   [k, v, cr] => (k.as_str(), v.as_str(), parse_cost_refund(cr.clone())),
+                                                   a          => panic!("Not the right number of jump type parts: {:?}", a),
+                                                 };
+                                                 out
+                                            }).collect::<Vec<(&str, &str, i64)>>();
+      section.jump_type = jump_types;
       section
     }
     let sections = jumpchain_stream.filter(|pair| match pair.as_rule() {

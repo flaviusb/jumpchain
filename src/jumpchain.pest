@@ -13,7 +13,8 @@ remainder         = { number ~ "CP unspent." }
 points_spent      = { number ~ "CP spent." }
 points_remainder  = { number ~ "CP remainder." }
 remainder_doubles = ${ "Remainder doubles to " ~ number ~ " CP." }
-section = ${ section_header ~ NEWLINE+ ~ points_increment ~ NEWLINE+ ~ (jump_type ~ NEWLINE+)+ ~ (perk ~ NEWLINE+)* ~ remainder? ~ NEWLINE* ~ points_spent? ~ WHITESPACE* ~ (points_remainder|remainder_doubles)? ~ NEWLINE* }
+jump_block        = ${ (jump_type ~ NEWLINE+)+ }
+section = ${ section_header ~ NEWLINE+ ~ points_increment ~ NEWLINE+ ~ jump_block ~ (perk ~ NEWLINE+)* ~ remainder? ~ NEWLINE* ~ points_spent? ~ WHITESPACE* ~ (points_remainder|remainder_doubles)? ~ NEWLINE* }
 
 document = _{ SOI ~ section+ ~ EOI }
 
