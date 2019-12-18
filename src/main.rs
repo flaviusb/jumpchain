@@ -121,7 +121,7 @@ fn parse_cost_refund(cost_refund: Pair<Rule>) -> i64 {
 
 fn parse_jumpchain_file<'a>(file: &'a str) -> Result<Jumpchain<'a>, pest::error::Error<Rule>> {
     let jumpchain_stream = JumpchainParser::parse(Rule::document, file)?;
-    println!("Jumpchain stream: {:?}", jumpchain_stream);
+    //println!("Jumpchain stream: {:?}", jumpchain_stream);
     // Make section
     use pest::iterators::Pair;
     fn make_section<'a>(section_pair: Pair<'a, Rule>) -> Section<'a> {
