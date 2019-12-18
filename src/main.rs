@@ -57,6 +57,14 @@ fn main() -> std::io::Result<()> {
           println!("## {}\nRemainder: {}\nPoints Spent: {}\nAccumulation: {}", section.0, section.1, section.2, section.3);
         }
       },
+      [_, option, filename] if option == "--do-calcs-double-or-nothing" => {
+        let unparsed_file = fs::read_to_string(filename.clone()).expect("cannot read file");
+        let jumpchain: Jumpchain = parse_jumpchain_file(&unparsed_file).expect("unsuccessful parse");
+        let calcs = calc(jumpchain, CalcRule::DoubleOrNothing);
+        for section in calcs {
+          println!("## {}\nRemainder: {}\nPoints Spent: {}\nAccumulation: {}", section.0, section.1, section.2, section.3);
+        }
+      },
       _             => usage(),
     }
     Ok(())
