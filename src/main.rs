@@ -52,7 +52,10 @@ fn main() -> std::io::Result<()> {
       [_, option, filename] if option == "--do-calcs-by-section-only" => {
         let unparsed_file = fs::read_to_string(filename.clone()).expect("cannot read file");
         let jumpchain: Jumpchain = parse_jumpchain_file(&unparsed_file).expect("unsuccessful parse");
-        println!("{:?}", jumpchain);
+        let calcs = calc(jumpchain, CalcRule::Individual);
+        for section in calcs {
+          println!("## {}\nRemainder: {}\nPoints Spent: {}\nAccumulation: {}", section.0, section.1, section.2, section.3);
+        }
       },
       _             => usage(),
     }
@@ -61,6 +64,31 @@ fn main() -> std::io::Result<()> {
 
 fn usage() {
   println!("Usage: jumpchain (options?) [file]");
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum CalcRule {
+  Individual, DoubleOrNothing
+}
+
+// Return a vec of (name, points 'leftover', points spent, and accumulation
+fn calc<'a>(jumpchain: Jumpchain<'a>, calc_kind: CalcRule) -> Vec<(&'a str, i64, i64, i64)> {
+  let mut acc_points: i64 = 0;
+  let mut jumps: Vec<(&'a str, i64, i64, i64)> = vec!{};
+  for jump in jumpchain.sections.into_iter() {
+    let start = (if calc_kind == CalcRule::DoubleOrNothing { acc_points } else { 0 }) + jump.points_increment;
+    let mut points_leftover = start;
+    let name = jump.name;
+    for jump_type in jump.jump_type.into_iter() {
+      points_leftover -= jump_type.2;
+    }
+    for perk in jump.perks.into_iter() {
+      points_leftover -= perk.1;
+    }
+    acc_points = if calc_kind == CalcRule::DoubleOrNothing { points_leftover * 2 } else { 0 };
+    jumps.push((name, points_leftover, start - points_leftover, acc_points));
+  }
+  jumps
 }
 
 // Cost is positive, refund is negative, Free is zero
@@ -72,7 +100,10 @@ fn parse_cost_refund(cost_refund: Pair<Rule>) -> i64 {
       match &cost_refund.into_inner().collect::<Vec<Pair<Rule>>>()[..] {
         []     => 0,
         [a]    => a.as_str().parse::<i64>().unwrap(),
-        [a, b] => b.as_str().parse::<i64>().unwrap(),
+        [a, b] => {
+          let val = b.as_str();
+          if val == "Free)" { 0 } else { val.parse::<i64>().unwrap() }
+        },
         _      => panic!("Too many things."),
       }
     }
