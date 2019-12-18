@@ -95,6 +95,15 @@ fn parse_jumpchain_file<'a>(file: &'a str) -> Result<Jumpchain<'a>, pest::error:
                                                  out
                                             }).collect::<Vec<(&str, i64)>>();
       section.perks = perks;
+      for bits in section_iterator {
+        match bits.as_rule() {
+          Rule::remainder         => section.remainder        = Some(bits.into_inner().as_str().parse::<i64>().unwrap()),
+          Rule::points_spent      => section.points_spent     = Some(bits.into_inner().as_str().parse::<i64>().unwrap()),
+          Rule::points_remainder  => section.points_remainder = Some(bits.into_inner().as_str().parse::<i64>().unwrap()),
+          Rule::remainder_doubles => section.points_remainder = Some(bits.into_inner().as_str().parse::<i64>().unwrap()),
+          _                       => (),
+        }
+      }
 
       section
     }
