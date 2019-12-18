@@ -46,14 +46,15 @@ fn main() -> std::io::Result<()> {
 }
 
 fn parse_jumpchain_file<'a>(file: &str) -> Result<Jumpchain<'a>, pest::error::Error<Rule>> {
-    let jumpchain_stream = JumpchainParser::parse(Rule::document, file)?.next().unwrap();
-    println!("{:?}", jumpchain_stream);
+    let jumpchain_stream = JumpchainParser::parse(Rule::document, file)?;
+    println!("Jumpchain stream: {:?}", jumpchain_stream);
     // Make section
     use pest::iterators::Pair;
     fn make_section<'a>(section_pair: Pair<Rule>) -> Section<'a> {
       let mut section = Section{name: "", points_increment: 0, jump_type: "", jump_type_cost: 0, perk: vec!{}, remainder: None, points_spent: None, points_remainder: None};
+      println!("section_pair.into_inner(): {:?}",section_pair.into_inner());
       section
     }
-    let sections = jumpchain_stream.into_inner().map(|section| make_section(section)).collect();
+    let sections = jumpchain_stream.map(|section| make_section(section)).collect();
     Ok(Jumpchain{sections: sections})
 }
