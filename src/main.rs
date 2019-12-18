@@ -45,16 +45,20 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-fn parse_jumpchain_file<'a>(file: &str) -> Result<Jumpchain<'a>, pest::error::Error<Rule>> {
+fn parse_jumpchain_file<'a>(file: &'a str) -> Result<Jumpchain<'a>, pest::error::Error<Rule>> {
     let jumpchain_stream = JumpchainParser::parse(Rule::document, file)?;
     println!("Jumpchain stream: {:?}", jumpchain_stream);
     // Make section
     use pest::iterators::Pair;
-    fn make_section<'a>(section_pair: Pair<Rule>) -> Section<'a> {
+    fn make_section<'a>(section_pair: Pair<'a, Rule>) -> Section<'a> {
       let mut section = Section{name: "", points_increment: 0, jump_type: "", jump_type_cost: 0, perk: vec!{}, remainder: None, points_spent: None, points_remainder: None};
-      println!("section_pair.into_inner(): {:?}",section_pair.into_inner());
+      //println!("section_pair.into_inner().next().unwrap().into_inner(): {:?}",section_pair.into_inner().next().unwrap().into_inner());
+      section.name = section_pair.into_inner().next().unwrap().into_inner().as_str();
       section
     }
-    let sections = jumpchain_stream.map(|section| make_section(section)).collect();
+    let sections = jumpchain_stream.filter(|pair| match pair.as_rule() {
+      Rule::section => true,
+      _             => false,
+    }).map(|section| make_section(section)).collect();
     Ok(Jumpchain{sections: sections})
 }
