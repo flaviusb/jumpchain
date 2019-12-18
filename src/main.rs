@@ -34,14 +34,33 @@ struct Section<'a> {
 use std::fs;
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    if(args.len() == 1) {
-      println!("Usage: jumpchain [file]")
-    } else {
-      let unparsed_file = fs::read_to_string(args[1].clone()).expect("cannot read file");
-      let jumpchain: Jumpchain = parse_jumpchain_file(&unparsed_file).expect("unsuccessful parse");
-      println!("{:?}", jumpchain);
+    let help = String::from("--help");
+    match &args[..] {
+      []            => panic!("Invoked nameless?"),
+      [_]           => usage(),
+      [_, option] if option == "--help" => usage(),
+      [_, filename]  => {
+        let unparsed_file = fs::read_to_string(filename.clone()).expect("cannot read file");
+        let jumpchain: Jumpchain = parse_jumpchain_file(&unparsed_file).expect("unsuccessful parse");
+        println!("{:?}", jumpchain);
+      },
+      [_, option, filename] if option == "--print-only" => {
+        let unparsed_file = fs::read_to_string(filename.clone()).expect("cannot read file");
+        let jumpchain: Jumpchain = parse_jumpchain_file(&unparsed_file).expect("unsuccessful parse");
+        println!("{:?}", jumpchain);
+      },
+      [_, option, filename] if option == "--do-calcs-by-section-only" => {
+        let unparsed_file = fs::read_to_string(filename.clone()).expect("cannot read file");
+        let jumpchain: Jumpchain = parse_jumpchain_file(&unparsed_file).expect("unsuccessful parse");
+        println!("{:?}", jumpchain);
+      },
+      _             => usage(),
     }
     Ok(())
+}
+
+fn usage() {
+  println!("Usage: jumpchain (options?) [file]");
 }
 
 // Cost is positive, refund is negative, Free is zero
