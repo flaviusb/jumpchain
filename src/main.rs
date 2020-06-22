@@ -65,6 +65,15 @@ fn main() -> std::io::Result<()> {
           println!("## {}\nRemainder: {}\nPoints Spent: {}\nAccumulation: {}", section.0, section.1, section.2, section.3);
         }
       },
+      [_, option, filename] if option == "--do-calcs-rolling-accumulation" => {
+        let unparsed_file = fs::read_to_string(filename.clone()).expect("cannot read file");
+        let jumpchain: Jumpchain = parse_jumpchain_file(&unparsed_file).expect("unsuccessful parse");
+        let calcs = calc(jumpchain, CalcRule::RollingAccumulation);
+        for section in calcs {
+          println!("## {}\nRemainder: {}\nPoints Spent: {}\nAccumulation: {}", section.0, section.1, section.2, section.3);
+        }
+      },
+
       _             => usage(),
     }
     Ok(())
@@ -76,7 +85,7 @@ fn usage() {
 
 #[derive(Debug, PartialEq, Eq)]
 enum CalcRule {
-  Individual, DoubleOrNothing
+  Individual, DoubleOrNothing, RollingAccumulation
 }
 
 // Return a vec of (name, points 'leftover', points spent, and accumulation
@@ -84,7 +93,11 @@ fn calc<'a>(jumpchain: Jumpchain<'a>, calc_kind: CalcRule) -> Vec<(&'a str, i64,
   let mut acc_points: i64 = 0;
   let mut jumps: Vec<(&'a str, i64, i64, i64)> = vec!{};
   for jump in jumpchain.sections.into_iter() {
-    let start = (if calc_kind == CalcRule::DoubleOrNothing { acc_points } else { 0 }) + jump.points_increment;
+    let start = (match calc_kind {
+      CalcRule::DoubleOrNothing => { acc_points },
+      CalcRule::RollingAccumulation => { acc_points },
+      CalcRule::Individual =>  { 0 },
+    }) + jump.points_increment;
     let mut points_leftover = start;
     let name = jump.name;
     for jump_type in jump.jump_type.into_iter() {
@@ -93,7 +106,11 @@ fn calc<'a>(jumpchain: Jumpchain<'a>, calc_kind: CalcRule) -> Vec<(&'a str, i64,
     for perk in jump.perks.into_iter() {
       points_leftover -= perk.1;
     }
-    acc_points = if calc_kind == CalcRule::DoubleOrNothing { points_leftover * 2 } else { 0 };
+    acc_points = match calc_kind {
+      CalcRule::DoubleOrNothing => { points_leftover * 2 },
+      CalcRule::RollingAccumulation => { points_leftover },
+      CalcRule::Individual          => { 0 },
+    };
     jumps.push((name, points_leftover, start - points_leftover, acc_points));
   }
   jumps
